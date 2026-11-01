@@ -27,7 +27,17 @@ questions = [{
                 "id": 2,
                 "q": "What is the main goal of the ideation phase of iterative design?",
                 "a": "Generating as many possible design solutions as possible"
-                }
+                },
+             {
+                "id": 3,
+                "q": "What are some benefits of direct manipulation?",
+                "a": "Easy to learn, immediate visual feedback, forgiving of mistakes, connected to real-world prior knowledge"
+                },
+             {
+                "id": 4,
+                "q": "What are the three models of disability?",
+                "a": "The medical model, the social model, and the moral model"
+                },
             ]
 
 class QuestionRequest(BaseModel):
@@ -40,13 +50,14 @@ def get_questions():
 
 @app.post("/add")
 def add_question(req: QuestionRequest):
+    # Use max id + 1 (not len) so ids stay unique after a delete
+    next_id = max((q["id"] for q in questions), default=-1) + 1
     questions.append({
-        "id": len(questions),
+        "id": next_id,
         "q": req.question,
         "a": req.answer
     })
 
-# TODO: Add a new route that can be used to a delete a question/answer from the dataset.
 @app.delete("/delete/{id}")
 def delete_question(id: int):
     for question in questions:

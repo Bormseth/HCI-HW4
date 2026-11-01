@@ -2,6 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>HCI Review Application</title>
         <link rel="stylesheet" href="style.css">
     </head>
@@ -9,37 +10,43 @@
         <h1 id="page-title">HCI Review Application</h1>
         <div id="layout">
             <!-- Left-hand navbar: script.js adds one preview per question -->
-            <nav id="sidebar">
-                <h1>Questions</h1>
+            <nav id="sidebar" aria-label="Questions">
+                <h2>Questions</h2>
                 <div id="preview-list"></div>
             </nav>
 
             <!-- Main area: script.js shows one card at a time in #card-area -->
             <main id="main">
                 <!-- Used for error messages to the user, initially hidden -->
-                <p id="error-message" class="hidden"></p>
+                <p id="error-message" class="hidden" role="alert"></p>
                 <div id="card-area"></div>
 
-                <!-- TODO: add Previous and Next buttons (ids "prev-button", "next-button") and a counter element (id="counter") -->
+                <div id="card-nav">
+                    <button id="prev-button" type="button">Previous</button>
+                    <span id="counter" aria-live="polite">Card 1 of 1</span>
+                    <button id="next-button" type="button">Next</button>
+                </div>
 
                 <div id="add-form">
                     <h2>Add a question</h2>
-                    <!-- TODO: add <label> elements for each input element.  -->
-                    <input id="new-question" type="text" placeholder="New question">
-                    <input id="new-answer" type="text" placeholder="New answer">
-                    <button id="add-button">Add question</button>
+                    <label for="new-question">Question</label>
+                    <input id="new-question" type="text" placeholder="New question" required>
+                    <label for="new-answer">Answer</label>
+                    <input id="new-answer" type="text" placeholder="New answer" required>
+                    <p id="add-hint">Enter both a question and an answer to add a card.</p>
+                    <button id="add-button" class="primary" type="button" aria-describedby="add-hint" disabled>Add question</button>
                 </div>
             </main>
         </div>
 
-        <dialog id="edit-dialog">
+        <dialog id="edit-dialog" aria-label="Edit question">
             <button id="close-dialog" class="close-btn" aria-label="Close dialog">&times;</button>
-            <p>Question:</p>
+            <label for="edit-question">Question</label>
             <textarea id="edit-question"></textarea>
-            <p>Answer:</p>
+            <label for="edit-answer">Answer</label>
             <textarea id="edit-answer"></textarea>
             <br>
-            <button id="update-button">Update question</button>
+            <button id="update-button" class="primary" type="button">Update question</button>
         </dialog>
 
         <script src="script.js"></script>

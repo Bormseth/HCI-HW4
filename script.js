@@ -15,7 +15,11 @@ const newAnswer = document.querySelector("#new-answer");
 const editDialog = document.querySelector("#edit-dialog");
 const editQuestion = document.querySelector("#edit-question");
 const editAnswer = document.querySelector("#edit-answer");
-// TODO: grab references to any necessary elements you added to index.html (search, counter, prev/next buttons)
+const addButton = document.querySelector("#add-button");
+const updateButton = document.querySelector("#update-button");
+const prevButton = document.querySelector("#prev-button");
+const nextButton = document.querySelector("#next-button");
+const counter = document.querySelector("#counter");
 
 
 // ---------- Errors ----------
@@ -79,18 +83,23 @@ function showPage() {
   if (currentIndex < 0) currentIndex = 0;
   renderPreviews();
   showCard();
+  updateCounter();
 }
 
 // Sidebar: one preview per question. Clicking a preview shows that card.
+// Previews are buttons so they can be reached and activated with the keyboard.
 function renderPreviews() {
   previewList.innerHTML = "";
   questions.forEach(function (question, index) {
-    const preview = document.createElement("div");
+    const preview = document.createElement("button");
+    preview.type = "button";
     preview.className = "preview";
     if (index === currentIndex) {
       preview.classList.add("active");
+      preview.setAttribute("aria-current", "true");
     }
     preview.textContent = question.q;
+    preview.title = question.q; // full text on hover, since the preview is truncated
     preview.addEventListener("click", function () {
       currentIndex = index;
       showPage();
@@ -111,42 +120,106 @@ function showCard() {
   const card = document.createElement("div");
   card.className = "card";
 
-  const deleteButton = document.createElement("button");
-  deleteButton.textContent = "Delete";
-  deleteButton.addEventListener("click", function () {
-    deleteQuestion(question);
-  });
+  const label = document.createElement("p");
+  label.className = "card-label";
+  label.textContent = "Question";
 
-  const editButton = document.createElement("button");
-  editButton.textContent = "Edit";
-  editButton.addEventListener("click", function () {
-    openEditDialog(question);
-  });
+  const questionButton = document.createElement("button");
+  questionButton.type = "button";
+  questionButton.className = "question";
+  questionButton.textContent = question.q;
+  questionButton.setAttribute("aria-expanded", "false");
 
-  const questionText = document.createElement("p");
-  questionText.className = "question";
-  questionText.textContent = question.q;
+  const hint = document.createElement("p");
+  hint.className = "hint";
+  hint.textContent = "Click the question to show the answer";
 
   const answerText = document.createElement("p");
   answerText.className = "answer hidden";
   answerText.textContent = question.a;
 
-  questionText.addEventListener("click", function () {
-    answerText.classList.toggle("hidden");
+  questionButton.addEventListener("click", function () {
+    const nowHidden = answerText.classList.toggle("hidden");
+    questionButton.setAttribute("aria-expanded", String(!nowHidden));
+    hint.textContent = nowHidden
+      ? "Click the question to show the answer"
+      : "Click the question to hide the answer";
   });
 
-  card.append(deleteButton, editButton, questionText, answerText);
+  const actions = document.createElement("div");
+  actions.className = "card-actions";
+
+  const editButton = document.createElement("button");
+  editButton.type = "button";
+  editButton.textContent = "Edit";
+  editButton.addEventListener("click", function () {
+    openEditDialog(question);
+  });
+
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.className = "danger";
+  deleteButton.textContent = "Delete";
+  deleteButton.addEventListener("click", function () {
+    deleteQuestion(question);
+  });
+
+  actions.append(editButton, deleteButton);
+  card.append(label, questionButton, hint, answerText, actions);
   cardArea.append(card);
 }
 
 
-// ---------- Navigation and search ----------
+// ---------- Navigation ----------
 
-// TODO: Previous / Next. Write functions that change currentIndex to the appropriate value
-// (wrapping around at both ends) and then call showPage(). Then write event listeners to attach these
-// functions to the appropriate Previous/Next buttons. 
+// Move to the previous card, wrapping from the first card to the last.
+function showPrevious() {
+  if (questions.length === 0) return;
+  currentIndex = (currentIndex - 1 + questions.length) % questions.length;
+  showPage();
+}
 
-// TODO: Update the progress text ("Card 3 of 3") in the counter whenever the card changes.
+// Move to the next card, wrapping from the last card to the first.
+function showNext() {
+  if (questions.length === 0) return;
+  currentIndex = (currentIndex + 1) % questions.length;
+  showPage();
+}
+
+// Update the progress text ("Card 3 of 3") and disable navigation when there is nothing to move to.
+function updateCounter() {
+  if (questions.length === 0) {
+    counter.textContent = "No cards";
+  } else {
+    counter.textContent = "Card " + (currentIndex + 1) + " of " + questions.length;
+  }
+  prevButton.disabled = questions.length < 2;
+  nextButton.disabled = questions.length < 2;
+}
+
+prevButton.addEventListener("click", showPrevious);
+nextButton.addEventListener("click", showNext);
+
+
+// ---------- Input constraints ----------
+
+// A card needs a real (non-blank) question and answer.
+function hasText(input) {
+  return input.value.trim() !== "";
+}
+
+function updateAddButton() {
+  addButton.disabled = !(hasText(newQuestion) && hasText(newAnswer));
+}
+
+function updateUpdateButton() {
+  updateButton.disabled = !(hasText(editQuestion) && hasText(editAnswer));
+}
+
+newQuestion.addEventListener("input", updateAddButton);
+newAnswer.addEventListener("input", updateAddButton);
+editQuestion.addEventListener("input", updateUpdateButton);
+editAnswer.addEventListener("input", updateUpdateButton);
 
 
 // ---------- Actions ----------
@@ -160,6 +233,7 @@ function openEditDialog(question) {
   editingId = question.id;
   editQuestion.value = question.q;
   editAnswer.value = question.a;
+  updateUpdateButton();
   editDialog.showModal();
 }
 
@@ -167,26 +241,31 @@ document.querySelector("#close-dialog").addEventListener("click", function () {
   editDialog.close();
 });
 
-document.querySelector("#update-button").addEventListener("click", async function () {
+updateButton.addEventListener("click", async function () {
+  if (!hasText(editQuestion) || !hasText(editAnswer)) return;
   editDialog.close();
   await apiSend("PUT", "/update/" + editingId, {
-    question: editQuestion.value,
-    answer: editAnswer.value
+    question: editQuestion.value.trim(),
+    answer: editAnswer.value.trim()
   });
   renderPage();
 });
 
-document.querySelector("#add-button").addEventListener("click", async function () {
-  await apiSend("POST", "/add", {
-    question: newQuestion.value,
-    answer: newAnswer.value
+addButton.addEventListener("click", async function () {
+  if (!hasText(newQuestion) || !hasText(newAnswer)) return;
+  const ok = await apiSend("POST", "/add", {
+    question: newQuestion.value.trim(),
+    answer: newAnswer.value.trim()
   });
+  if (!ok) return;
   newQuestion.value = "";
   newAnswer.value = "";
-  currentIndex = questions.length;
+  updateAddButton();
+  currentIndex = questions.length; // jump to the new card (clamped in showPage)
   renderPage();
 });
 
 
 // ---------- Start the app ----------
+updateAddButton();
 renderPage();

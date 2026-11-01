@@ -1,19 +1,56 @@
+:root {
+  --ink: #1f2933;
+  --muted: #52606d;
+  --line: #d3dae1;
+  --surface: #ffffff;
+  --page: #f5f7fa;
+  --accent: #1f5fbf;
+  --accent-dark: #174a96;
+  --accent-soft: #e3edfb;
+  --good: #1b6b3a;
+  --good-soft: #eaf6ee;
+  --danger: #b00020;
+}
+
 body {
-  font-family: sans-serif;
+  font-family: system-ui, sans-serif;
   margin: 0;
+  color: var(--ink);
+  background: var(--page);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ---------- Hierarchy: page title > section headings > body text ---------- */
+
+#page-title {
+  margin: 0;
+  padding: 16px 24px;
+  font-size: 28px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
 }
 
 #layout {
   display: flex;
-  height: 100vh;
+  flex: 1;
+  min-height: 0;
 }
 
 #sidebar {
   width: 260px;
-  border-right: 1px solid #ccc;
-  padding: 12px;
+  border-right: 1px solid var(--line);
+  padding: 16px 12px;
   box-sizing: border-box;
   overflow-y: auto;
+  background: var(--surface);
+}
+
+#sidebar h2 {
+  font-size: 15px;
+  color: var(--muted);
+  margin: 0 0 8px 10px;
 }
 
 #main {
@@ -22,35 +59,108 @@ body {
   overflow-y: auto;
 }
 
-#page-title {
-    padding-left: 15px;
+#card-area,
+#card-nav,
+#add-form {
+  max-width: 640px;
 }
 
+/* ---------- Sidebar previews (signifiers + active state) ---------- */
+
 .preview {
-  padding: 8px;
-  color: #999;
+  display: block;
+  width: 100%;
+  margin: 0 0 4px;
+  padding: 8px 10px;
+  text-align: left;
+  font: inherit;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  border-left: 4px solid transparent;
+  border-radius: 4px;
   cursor: pointer;
   white-space: nowrap;  /* Remove text wrap to only show a preview of each question, not the entire text. */
-  overflow: hidden;            
+  overflow: hidden;
   text-overflow: ellipsis; /* Replace overflow text with an ellipsis (...) */
 }
 
-.card {
-  margin-bottom: 12px;
+.preview:hover {
+  background: var(--page);
+  color: var(--ink);
 }
 
-.question {
-  cursor: pointer;
-  font-size: 18px;
-}
-
-.answer {
-  color: #8bc98b;
+/* The currently selected question: tinted background, accent bar, bold dark text */
+.preview.active {
+  background: var(--accent-soft);
+  border-left-color: var(--accent);
+  color: var(--ink);
   font-weight: bold;
 }
 
+/* ---------- Flashcard (common region, proximity, similarity) ---------- */
+
+.card {
+  margin-bottom: 16px;
+  padding: 20px 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.card-label {
+  margin: 0 0 4px 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.question {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 8px;
+  text-align: left;
+  font: inherit;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.question:hover {
+  background: var(--accent-soft);
+}
+
+.hint {
+  margin: 4px 0 0 8px;
+  font-size: 14px;
+  color: var(--accent);
+}
+
+.answer {
+  margin: 12px 0 0;
+  padding: 12px 16px;
+  color: var(--good);
+  font-weight: bold;
+  background: var(--good-soft);
+  border-left: 4px solid var(--good);
+  border-radius: 4px;
+}
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 #error-message {
@@ -60,30 +170,131 @@ body {
   border-radius: 6px;
 }
 
+/* ---------- Previous / Next ---------- */
+
+#card-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+#counter {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* ---------- Buttons (signifiers) ---------- */
+
 button {
+  font: inherit;
   font-size: 14px;
-  padding: 6px 12px;
-  margin-right: 6px;
+  padding: 8px 14px;
+  color: var(--accent);
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
   cursor: pointer;
-  outline: none;
+}
+
+button:hover:not(:disabled) {
+  background: var(--accent-soft);
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  color: #7b8794;
+  border-color: var(--line);
+  cursor: not-allowed;
+}
+
+button.primary {
+  color: #fff;
+  background: var(--accent);
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--accent-dark);
+}
+
+button.primary:disabled {
+  color: #7b8794;
+  background: #e4e7eb;
+  border-color: var(--line);
+}
+
+button.danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+button.danger:hover:not(:disabled) {
+  background: #fde8e8;
+}
+
+/* ---------- Add form ---------- */
+
+#add-form {
+  padding: 16px 24px 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+#add-form h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
 }
 
 input {
   display: block;
   font-size: 16px;
   padding: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   width: 100%;
   box-sizing: border-box;
 }
 
+#add-hint {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ---------- Edit dialog ---------- */
+
+dialog {
+  width: 360px;
+  max-width: 90vw;
+  border-radius: 10px;
+}
+
 textarea {
-  width: 300px;
+  width: 100%;
   height: 60px;
+  margin-bottom: 8px;
+  box-sizing: border-box;
 }
 
 dialog .close-btn {
   position: absolute;
+  top: 8px;
   right: 10px;
+  padding: 2px 8px;
+  font-size: 20px;
   color: #b00020;
+  border: 0;
+  background: none;
 }
